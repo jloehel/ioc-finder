@@ -5,9 +5,7 @@ import pymisp
 
 def create_tag(value):
     """Creates a MISP tag"""
-    tag = pymisp.MISPTag()
-    tag.value = value
-    return tag
+    return pymisp.MISPTag(name=value)
 
 
 def create_attribute(misp_category, misp_type, value):

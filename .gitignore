@@ -65,3 +65,7 @@ target/
 travis_pypi_setup.py
 Pipfile
 Pipfile.lock
+
+# virtualenv
+.venv*
+venv*

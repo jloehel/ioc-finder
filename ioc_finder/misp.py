@@ -20,14 +20,15 @@ def create_attribute(misp_category, misp_type, value):
     return attribute
 
 
-def convert2misp(misp_cls, *args):
+MISP_CONVERT_FUNCTIONS = {
+    "attribute": create_attribute,
+    "tag": create_tag,
+}
+
+
+def convert2misp(misp_type, *args):
     """converts a value to MISP object"""
-    misp_object = None
-    if misp_cls == "attribute":
-        misp_object = create_attribute(*args)
-    if misp_cls == "tag":
-        misp_object = create_tag(*args)
-    return misp_object
+    return MISP_CONVERT_FUNCTIONS[misp_type](*args)
 
 
 MISP_MAPPER = {
@@ -58,20 +59,24 @@ MISP_MAPPER = {
 }
 
 
-def to_misp_attributes(ioc_type, values):
-    """Converts a list of iocs with the same type into MISP objects"""
-    if isinstance(values, list):
-        return [
+def to_misp(ioc_type, values):
+    """Converts a list of IoCs with the same type into MISP objects"""
+    if isinstance(values, list) and ioc_type in MISP_MAPPER:
+        return MISP_MAPPER[ioc_type][0], [
             convert2misp(*MISP_MAPPER[ioc_type], value)
             for value in values
-            if ioc_type in MISP_MAPPER
         ]
-    return values
+    return None, []
 
 
 def convert(iocs):
-    """Converts IOC string values to MISP attributes and tag"""
-    return {
-        ioc_type: to_misp_attributes(ioc_type, values)
-        for ioc_type, values in iocs.items()
+    """Converts IoCs to MISP attributes and tags"""
+    misp_objects = {
+        "attributes": [],
+        "tags": [],
     }
+    for ioc_type, values in iocs.items():
+        misp_type, values = to_misp(ioc_type, values)
+        if misp_type:
+            misp_objects[f"{misp_type}s"] += values
+    return misp_objects
